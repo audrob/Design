@@ -1,0 +1,849 @@
+---
+title: "7080-Robertson_Exam1"
+author: "Audrey Robertson"
+date: "2024-02-27"
+output: word_document
+---
+
+R Packages: tidyverse, dplyr, randomizr, DescTools, tinytex, knitr, markdown, ggplot2, car
+
+```{r setup, include=F}
+
+library(tidyverse);library(dplyr)
+library(randomizr);library(DescTools)
+library(tinytex);library(knitr);library(markdown)
+library(ggplot2)
+library(car)
+
+```
+
+## Audrey Robertson Question 1
+
+24 Rats were selected to study the effect of four different types of diets (D1, D2, D3, D4).
+
+The diets were given for a two-week period and the weight gains of the rats were recorded after the experimental period.
+
+R Code:
+
+```{r Q1_input, include=T}
+
+##input data
+d1 <- data.frame(Diets=rep(c("D1","D2", "D3", "D4"), each=6),
+                     Weights = as.numeric(c(20,18,18,18,16,15,
+                                            14,20,18,18,16,16,
+                                            30,31,31,28,28,24,
+                                            21,19,18,17,16,15)))
+##create treatment levels t=4
+d1$Diets <- factor(d1$Diets, levels=c("D1","D2", "D3", "D4"),
+       labels=c("D1","D2", "D3", "D4"))
+
+
+Q1 <- data.frame(D1=d1[d1$Diets=="D1", 2],
+                 D2=d1[d1$Diets=="D2", 2], 
+                 D3=d1[d1$Diets=="D3", 2],
+                 D4=d1[d1$Diets=="D1", 2])
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(Q1, caption= "Observed Weights (g) of different Diets", "simple")
+```
+
+### Write the linear statistical model for the experiment and explain the model components.
+
+R Code:
+
+```{r Q1 a, include=F}
+
+#linear regression to identify model
+d1lm<- lm(Weights~Diets, data=d1)
+summary(d1lm)
+
+knitr::opts_chunk$set(echo=T)
+```
+
+The linear model is:\
+$Y=\beta_0+\Sigma(\beta_i[X_i])+\epsilon_{ij}$\
+$Weights=17.5 -0.5[D2]+11.1667[D3]+0.1667[D4]$
+
+The model components are:
+
+-   Treatment: Diets (D1, D2, D3, D4)
+
+-   Response: Weights (g)
+
+-   Experimental Materials: 24 Rats
+
+### Assess each of the following assumptions for the model:
+
+-   Model adequately fits the data
+
+R Code:
+
+```{r 1b_LOF, inlcude=T}
+# Model Adequately Fits Data
+#Plot to examine. standardized residuals x treatment/level
+d1lmrs <- data.frame(cbind(rstandard=rstandard(d1lm), obs=as.numeric(c(1:24))))
+
+d1lmrs$Treatments <- cut(d1lmrs[,2], breaks=c(1, 6, 12, 18, 24),
+                         labels = c('D1','D2','D3','D4'),
+                         include.lowest=T)
+
+ggplot(data=d1lmrs, mapping = aes(x = Treatments))+
+  geom_point(aes(y=rstandard), shape=18, size=3)+
+  labs(title = "Plot of Standardized Residuals Versus Treatment",
+       x= "Treatments", y="Standardized Residuals")
+
+
+
+knitr::opts_chunk$set(echo=T)
+```
+
+This residual plot shows no pattern which suggests that there is not lack of fit. The model adequately fits the data.
+
+-   Error terms are normally distributed.
+
+R Code:
+
+```{r 1b_Error_Normality, inlcude=T}
+
+# Normality of Errors
+
+## qqnorm plot of residuals x standard normal quantiles
+qqnorm(d1lm$residuals, main="Normal Probability Plot of Residuals",
+       xlab="Quantiles of the Standard Normal", ylab="Residuals", 
+       pch=19, col="black", cex=0.5, cex.lab=1, cex.axis=1)
+abline(0,1, col="red", lwd=1) # reference line
+
+# Statistical test for normality: Shapiro-Wilk
+## Test residuals of model instead of model
+shapiro.test(d1lm$residuals) 
+
+
+knitr::opts_chunk$set(echo=T)
+```
+
+The normal probability plot of residuals shows a middle bulk and normal tails. The error terms appear to be distributed.
+
+The Shapiro-Wilk test for normality has a high p-value. We retain the null hypothesis that the residual data is distributed normally.
+
+-   Error terms have similar variances for each diet.
+
+R Code:
+
+```{r 1b Homoscedasticity, include=T}
+
+# Model Homoscedasticity- Plot resid. x estimated treatment mean
+# Create DF with residual column
+d1a <- d1 %>% mutate(residuals=d1lm$residuals) %>% group_by(Diets) %>% 
+  mutate(esttmean = mean(Weights, na.rm=T))
+
+# Plot  
+ggplot(data=d1a, mapping = aes(x = esttmean))+
+  geom_point(aes(y=residuals, colour=Diets), shape=18, size=3)+
+  labs(title = "Plot of Estimated Treatment Means Versus Residuals",
+       x= "Estimated Treatment Mean", y="Standardized Residuals")
+
+# Stat test for homoscedasticity
+# Levene's Test using median as center:
+levene1 <- LeveneTest(Weights ~ Diets, data = d1, center=median)
+print("Levene's Test (Median) for Homogeneity of Variances:")
+print("Ho: All diet variances are the same")
+print("Ha: At least one diet variance is not the same")
+print(paste("Test Statistic =", levene1[1,2]))
+print(paste("p-value =", levene1[1,3]))
+print("Retain the null")
+
+knitr::opts_chunk$set(echo=T)
+```
+
+The standard residual plot, overall, shows equal dispersion of residuals. Diet D3 appears to differ from D1, D2, D4.
+
+The Levene's Test for Homogeneity of Variances shows that the data has homogeneous variances with a p-value of 0.7342.
+
+### Calculate the standardized residuals and asses the data for outliers. Use a cutoff of 3 Standard Deviations from zero.
+
+R Code:
+
+```{r 1c_SResiduals, include=T}
+
+# plot standard residuals
+ggplot(data=d1lmrs, mapping = aes(x = Treatments))+
+  geom_point(aes(y=rstandard), shape=18, size=3)+
+  labs(title = "Plot of Standardized Residuals Versus Treatment",
+       x= "Treatment Level D", y="Standardized Residuals")
+
+# create table of standard residuals
+d1s <- d1lmrs %>% summarise(across(where(is.numeric), .fns = 
+                          list(min = min,
+                               median = median,
+                               mean = mean,
+                               stdev = sd,
+                               q25 = ~quantile(., 0.25),
+                               q75 = ~quantile(., 0.75),
+                               max = max))) %>%
+  pivot_longer(everything(), names_sep='_', names_to=c('variable', '.value'))
+
+## example via: https://www.statology.org/summary-statistics-in-r-dplyr/
+
+# Assess for outliers using 3 sigma rule
+outliers <- abs(rstandard(d1lm)) > 3
+
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(d1lmrs, caption= "Standard Residual Values","simple", align="llc")
+```
+
+The data does not have any outliers. No standard residual is \>3 or \<-3.
+
+### Test the hypothesis of equal rat weights between the four treatment groups.
+
+Use $\alpha=0.05$. Your answer should include a complete ANOVA table.
+
+$H_o: \mu_1 = \mu_2 = \mu_3 = \mu_4$\
+$H_a:$ At least one $\mu_i$ is not equal.
+
+R Code:
+
+```{r 1b Test_Means, include=T}
+
+# d) all rat wt means the same
+d1lm<- lm(Weights~Diets, data=d1)
+
+d1lmsummary <- summary(d1lm)
+d1lmanova <- rbind(anova(d1lm), 
+                  Total=c(23, anova(d1lm)[1,2]+anova(d1lm)[2,2],NA,NA,NA))
+
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(d1lmanova, caption= "ANOVA Table","simple")
+```
+
+The F-statistic of 39.778 is significant with a p-value \< 0.001. We reject the null that all diet means are equal. There is at least one treatment mean is not equal.
+
+### This Experiment was conducted in a completely randomized design. Show a randomization of the four treatments to the 24 rat using a random permutation of numbers 1 to 24
+
+R Code:
+
+```{r 1e Random Assignment, include=T}
+
+# e) assign randomly
+rats <-data.frame(Unit=c(1:24));rats
+
+rats$Treatment <- Treatment <- complete_ra(N=24, 
+          conditions= c("D1","D2", "D3", "D4"))
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(rats, caption= "Random Diet Assignment to Rats")
+```
+
+### In 20 words or less explain why an ANOVA technique is used rather than multiple two sample t-tests.
+
+Using multiple t-tests would identify too many random differences and increase family-wise (Type I) error rate as more groups are compared.
+
+### If there is no diet effect, the F-ratio value will be equal to...
+
+If there is no diet effect, the F-ratio value will be equal to 1.
+
+\newpage
+
+## Audrey Robertson Question 2
+
+Using the data in question 1, do the following:
+
+### Use Bonferroni's method to estimate and calculate 95% Confidence intervals for the two contrasts below. Test the hypothesis that each contrast is zero.
+
+#### Contrast comparing the average rat weight for the D1 and D4 treatments to the D2 and D3 treatments.
+
+$C_1=(\mu_{D1}+\mu_{D4})-(\mu_{D2}+\mu_D3)$
+
+$H_o: C1=0$\
+$H_a: C1\ne0$
+
+R Code:
+
+```{r 2ai,include=T}
+
+# Values needed to calculate CIs for both contrasts
+alpha <- 0.05
+n <- nrow(d1)
+t <- 4
+k <- 2
+r <- 6
+
+# Adjust alpha to calculate the bonferroni t-value using the student t 
+# Adjusted_Alpha = alpha/(2*k)
+# df = df for bonferroni (N-t)
+t_val <- qt(1 -(alpha / (2 * k)), df = (n-t))
+
+# Calculate Margin of Error for these multiple contrasts
+# ME = t_val * sqrt(MSE* sum(k)/r)
+ME <- t_val * sqrt(d1lmanova[2,3] * (1/r + 1/r))
+
+
+# i)  C1 = (mu_1+mu_4)-(mu_2+mu_3)
+C1 <- c(mean(d1$Weights[d1$Diets == "D1"]) + 
+          mean(d1$Weights[d1$Diets == "D4"]) - 
+          mean(d1$Weights[d1$Diets == "D2"]) - 
+          mean(d1$Weights[d1$Diets == "D3"]))
+
+
+#Calculate CI for C1
+# CI = contrast +/- ME
+CI_C1_Lower <- (C1 - ME)
+CI_C1_Upper <- (C1 + ME)
+
+
+# Test hypothesis that C1=0
+c_test1 <- ifelse(CI_C1_Lower <= 0 & CI_C1_Upper >= 0, "Not Reject H0: Contrast is Zero", "Reject H0: Contrast is Not Zero")
+
+# print results
+print("Contrast C1:")
+print(C1)
+
+print("95% Bonferroni-adjusted Confidence Interval:")
+print(paste("Lower Bound:", CI_C1_Lower))
+print(paste("Upper Bound:", CI_C1_Upper))
+print("Hypothesis Test Result:")
+print(c_test1)
+
+knitr::opts_chunk$set(echo=T)
+
+```
+
+Since The 95% CI for C1 does not include 0, we reject the null hypothesis that C1=0. The treatment means differ between D1+D4 and D2+D3.
+
+#### Contrast comparing the average rat weight for the D1 and D2 treatments.
+
+$C_2=\mu_{D1}-\mu_{D2}$
+
+$H_o: C2=0$\
+$H_a: C2\ne0$
+
+R Code:
+
+```{r 2aii, include=T}
+
+#ii) D1 vs D2
+
+# C2 = mu_1 - mu_2
+C2 <- c(mean(d1$Weights[d1$Diets == "D1"]) - mean(d1$Weights[d1$Diets == "D2"]))
+
+# Calculate bonferroni CI using adjusted alpha again
+# ME is the same as ME for C1
+## k_i and r are same.
+CI_C2_Lower <- (C2 - ME)
+CI_C2_Upper <- (C2 + ME)
+
+
+# Test hypothesis that C2=0
+c_test2<- ifelse(CI_C2_Lower <= 0 & CI_C2_Upper >= 0, "Not Reject H0: Contrast is Zero", "Reject H0: Contrast is Not Zero")
+
+# print
+print(paste("Contrast C2:",C2))
+print("95% Bonferroni-adjusted Confidence Interval:")
+print(paste("Lower Bound:", CI_C2_Lower))
+print(paste("Upper Bound:", CI_C2_Upper))
+print("Decision:")
+print(c_test2)
+
+knitr::opts_chunk$set(echo=T)
+```
+
+Since The 95% CI for C2 includes 0, we retain the null hypothesis that C2=0. The treatment means do not differ between D1 and D2.
+
+#### Are the contrasts orthogonal? Justify your conclusion.
+
+For a balanced design, 2 contrasts are orthogonal if:\
+$\Sigma{k_id_i=0}$ where $k_i$ and $d_i$ are the contrast coefficients.
+
+$(1+1)*(1+1)=4\ne0$ Therefore, C1 and C2 are not orthogonal contrasts.
+
+### Use the Scheffe's test at the 5% significance level to test the hypothesis
+
+Scheffe Critical Value:\
+$S_{\alpha_E,u}=s_{\hat{C}_u}*\sqrt{(t-1)F_{\alpha_E,t-1,N-t}}$\
+$s_{\hat{C}_u}=ME=\sqrt{MSE*\Sigma(k^2_i/r_i)}$
+
+Reject the null hypothesis if $\hat{C_u}>S_{\alpha_E,u}$
+
+1)  $H_o:C1=0$\
+    $H_a:C1\ne0$, where $C_1=(\mu_{D1}+\mu_{D4})-(\mu_{D2}+\mu_D3)$
+
+$|\hat{C_1}|=10.5$
+
+R Code:
+
+```{r 2bi_Scheffe, include=T}
+
+# Find critical value
+scheffe_crit <- ME * sqrt((t-1)*(qf(0.95, df1=(t-1), df2=(n-t))));scheffe_crit
+
+# Test C1
+print(paste("Scheffe Test Critical Value:", scheffe_crit))
+print(paste("Scheffe Test for C1:", abs(C1), ">", scheffe_crit))
+
+knitr::opts_chunk$set(echo=T)
+```
+
+Since C1 is greater than the critical value, we reject the null hypothesis that C1=0. The treatment means differ between D1+D4 and D2+D3.
+
+2)  $H_o:C2=0$\
+    $H_a:C2\ne0$, where \$C_2=\\mu\_{D1}-\\mu\_{D2}
+
+$|\hat{C_2}|=0.5$
+
+R Code:
+
+```{r 2bii_Scheffe, inlcude=T}
+
+# Testing C2
+print(paste("Scheffe Test Critical Value:", scheffe_crit))
+print(paste("Scheffe Test for C2:", abs(C2), "<", scheffe_crit))
+
+knitr::opts_chunk$set(echo=T)
+```
+
+Since C2 is less than the critical value, we retain the null hypothesis that C2=0. The treatment means do not differ between D1 and D2.
+
+### Considering D1 as a control treatment, calculate the 95% simultaneous confidence intervals for comparing the average rat weight for each of the other treatments with that of the control.
+
+R Code:
+
+```{r 2c, include=T}
+
+# 95% simultaneous CI, D1 is control/reference
+# Use Dunnett Test for simultaneous CI with reference
+
+Q2dtest <- DunnettTest(d1$Weights,d1$Diets, control='D1')
+print(Q2dtest)
+
+knitr::opts_chunk$set(echo=T)
+```
+
+In comparing D2, D3, and D4 to a control treatment (D1), only D3 showed a significant difference in treatment means. The contrast interval for D3-D1 does not contain 0 while the other intervals do.
+
+### Use Multiple Comparisons with the Best Treatment procedure to select a subset of diet groups that contain the diet group with the lightest rats with a 95% chance of correct selection.
+
+R Code:
+
+```{r 2d, include=T}
+
+# Use min_yj to find lightest rats
+
+min_yj=data.frame(Diets=c('D1','D2','D3','D4'),min_yj=c(17,17.5,17,17))
+
+# M-value of d_{a,k,v} from Table VI
+## k=3, v-20, alpha=0.05, s^2=MSE
+## d_cat=2.19
+
+M = 2.19*(sqrt((2*(d1lmanova[2,3]^2))/6));M
+  
+d1best <- d1a %>% distinct(esttmean) %>% full_join(min_yj, join_by(Diets)) %>% mutate(D_i=(esttmean-min_yj)) %>% mutate(D_Lower=ifelse(D_i - M >= 0, 0, D_i - M)) %>% mutate(D_Upper=ifelse(D_i + M <= 0, 0, D_i + M))
+d1best
+
+#Select if CI contains 0 or has a upper bound of 0
+##D1, D2, D4 is selected.
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(d1best, caption= "Multiple Comparisons with Best Treatment Procedure", "simple")
+```
+
+The confidence interval for D1, D2, and D4 contains 0, so these are selected as best treatments. The best set of treatments to select the lightest rats are diets D1,D2,D4.
+
+\newpage
+
+## Audrey Robertson Question 3
+
+### Suppose that five normal populations have means of:
+
+$\mu_1=10, \mu_2=11, \mu_3=14, \mu_4=15, \mu_5=18$\
+We are interested in testing the null hypothesis of equal population means for the five groups. How many observations should be sampled from each population so that the probability of rejecting the null hypothesis when it in fact not true is at least 0.90?\
+Assume that $\alpha=0.05, MSE=7$
+
+$\Phi=\sqrt{r*\Sigma{\tau^2_i/t\sigma^2}}$ $t=5$ groups\
+$\sigma^2=7^2=35$\
+$\Sigma{\tau^2_i}=\Sigma(\mu_{i.}-\mu_{..})^2$\
+$=(10-13.6)^2+(11-13.6)^2+(14-13.6)^2+(15-13.6)^2+(18-13.6)^2$\
+$=41.2$
+
+$\Phi=\sqrt{r*41.2/35}=\sqrt{r*1.177142857}$
+
+F test power curves for fixed effects model used to find power.
+
+for r=4, $\Phi=2.1699$ and Power is about 0.89. for r=5, $\Phi=2.426$ and Power is about 0.98.
+
+5 Observations should be selected from each population for a power of at least 0.90.
+
+R Code:
+
+```{r 3a, include=T}
+
+d3 <- data.frame(pop = c(1,2,3,4,5), mu_i=c(10,11,14,15,18))
+d3 <- d3 %>%
+  mutate(tau_i = mu_i - (sum(mu_i)/5));d3
+
+#t*MSE=5*7=35
+
+d3r <- data.frame(r=c(3:6))
+d3r <- d3r %>% 
+  mutate(v2 = (r-1)*5,) %>%
+  mutate(Phi=sqrt(r*sum(d3$tau_i^2)/35));d3r
+
+Power<- data.frame(r=c(3:6), est_power=c(0.75,0.89,0.98,NA))
+
+d3r <- d3r %>% full_join(Power, join_by(r))
+d3r
+
+knitr::opts_chunk$set(echo=T)
+```
+
+### If we want to detect a maximum difference between means of 10 units with a probability of at least 0.80, what sample size should be used?
+
+$\Phi=\sqrt{r*D^2/2t\sigma^2}$ $t=5$ groups\
+$\sigma^2=7^2=35$\
+$D^2=10^2=100$\
+$\Phi=\sqrt{r*100/70}=\sqrt{r*1.428571429}$
+
+F test power curves for fixed effects model used to find power.
+
+for r=2, $\Phi=1.39$ and Power is about 0.55.\
+for r=3, $\Phi=2.07$ and Power is about 0.83.\
+for r=4, $\Phi=2.39$ and Power is about 0.975.
+
+3 observations should be selected from each population for a power of at least 0.80. The sample size should be n=15 for a power of at least 0.80.
+
+R Code:
+
+```{r 3b, include=T}
+
+d3r2 <- data.frame(r=c(2:4))
+d3r2 <- d3r2 %>% 
+  mutate(v2 = (r-1)*5,) %>%
+  mutate(Phi=sqrt(r*1.428571429));d3r2
+
+Power<- data.frame(r=c(2:4), est_power=c(0.55,0.83,0.975))
+
+d3r2 <- d3r2 %>% full_join(Power, join_by(r))
+d3r2
+
+knitr::opts_chunk$set(echo=T)
+```
+
+\newpage
+
+## Audrey Robertson Question 4
+
+In a germplasm bank in an experimental station, four new types of rice varieties were selected and compared. There were only 23 plots available.
+
+R Code:
+
+```{r 4 input, include=T}
+
+#input data
+d4 <- data.frame(Variety= c(rep('V1',times=6),rep('V2',times=7), 
+                            rep('V3',times=6), rep('V4',times=4)),
+                 Yield= as.numeric(c(30,74,46,58,62,38,
+                                     50,38,66,62,44,58,80,
+                                     18,56,34,24,66,52,
+                                     88,78,60,76)))
+d4 <- d4 %>% group_by(Variety) %>% mutate(vmean=mean(Yield, na.rm=T))
+d4m <- d4 %>% distinct(Variety,vmean)
+
+
+
+Qd4 <- data.frame(Variety= c(rep('V1',times=7),rep('V2',times=7), 
+                            rep('V3',times=7), rep('V4',times=7)),
+                 Yield= as.numeric(c(30,74,46,58,62,38,NA,
+                                     50,38,66,62,44,58,80,
+                                     18,56,34,24,66,52,NA,
+                                     88,78,60,76,NA,NA,NA)))
+Q4 <- data.frame(
+  V1 = Qd4[Qd4$Variety == "V1", "Yield"],
+  V2 = Qd4[Qd4$Variety == "V2", "Yield"],
+  V3 = Qd4[Qd4$Variety == "V3", "Yield"],
+  V4 = Qd4[Qd4$Variety == "V4", "Yield"])
+
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(Q4, caption= "Plot Yield (kg) of different Varieties", "simple")
+
+```
+
+### Construct a 95% confidence interval estimate of the mean response for Variety 1.
+
+R Code:
+
+```{r 4a, include=T}
+
+# a) confidence interval estimate of mean response for variety 1
+d4lm <- lm(Yield ~ Variety, data=d4)
+
+CI4 <- confint(d4lm, level=0.95)
+
+print(paste("95% Confidence Interval for V1: [", round(CI4[1,1], 3), ",", round(CI4[1,2], 3), "]"))
+
+knitr::opts_chunk$set(echo=T)
+```
+
+The 95% confidence interval for V1 is (37.771, 64.896).
+
+### Construct 95% confidence intervals for all pairwise confidence intervals individually.
+
+R Code:
+
+```{r 4b, include=T}
+
+# b) 95% CI for all pairwise
+d4pair <- data.frame(pair1=c('V1','V1','V1','V2','V2','V3'),
+                     rep1=as.numeric(c(6,6,6,7,7,6)),
+                     pair2=c('V2','V3','V4','V3','V4','V4'),
+                     rep2=as.numeric(c(7,6,4,6,4,4)),
+                     diff=as.numeric(c(abs(d4m[1,2]-d4m[2,2]),
+                                     abs(d4m[1,2]-d4m[3,2]),
+                                     abs(d4m[1,2]-d4m[4,2]),
+                                     abs(d4m[2,2]-d4m[3,2]),
+                                     abs(d4m[2,2]-d4m[4,2]),
+                                     abs(d4m[3,2]-d4m[4,2]))));d4pair
+d4pair <- d4pair %>% 
+  mutate(lwr=(diff-(2.093024*(sqrt((251.92/rep1)+(251.92/rep2)))))) %>%
+  mutate(upr=(diff+(2.093024*(sqrt((251.92/rep1)+(251.92/rep2))))))
+d4pair
+
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(d4pair, caption= "Paired Confidence Intervals", "simple")
+```
+
+### Use Tukey's method to calculate 95% simultaneous confidence intervals for all pairwise comparisons of the treatment mean. Perform 95% inequalities tests for each pairwise comparison. Interpret your results.
+
+R Code:
+
+```{r 4c, include=T}
+
+#c Tukey's Pairwise CIs
+lm4 <- aov(formula = Yield ~ Variety, data = d4)
+PostHocTest(lm4, method = "hsd")
+
+knitr::opts_chunk$set(echo=T)
+```
+
+### In a single sentence, explain why the interval widths are different in part b and c.
+
+The Tukey procedure is more conservative with a smaller alpha level and it makes detecting significant differences among pairwise treatments more challenging.
+
+### What additional information is given from a confidence interval that in not given in a hypothesis test?
+
+Confidence intervals are an interval estimate as opposed to a point estimate. In other words, confidence intervals give a range of plausible values for the given parameter and hypothesis tests only test if a single value is significant for the given parameter.
+
+\newpage
+
+## Audrey Robertson Question 5
+
+Data from a completely randomized experimental design with three treatments.\
+Use these data to construct the ANOVA Table.
+
+R Code:
+
+```{r 5, include=T}
+
+#input data
+d5 <- data.frame(r=as.numeric(c(10,8,7)),
+                 m=as.numeric(c(6,10,8)),
+                 s=as.numeric(c(2,5,4)));d5
+N <- sum(d5$r);N
+grand_mean <- mean(d5$m)
+
+#create ANOVA table
+anova5 <- data.frame(Source=c('Treatment','Error','Total'), SS=as.numeric('','',''), 
+                    df=as.numeric(c((3-1),(sum(d5$r)-3),(sum(d5$r)-1))))
+anova5[1,2] = as.numeric(sum(d5$r * (d5$m-grand_mean)^2))
+anova5[2,2] = as.numeric(sum((d5$r -1) * d5$s^2))
+anova5[3,2] = as.numeric(anova5[2,2] + anova5[1,2])
+anova5
+
+anova5 <- anova5 %>% mutate(MS=SS/df)
+anova5 <- anova5 %>% mutate(Fcat=c((anova5[1,4]/anova5[2,4]),'','')) %>% mutate(Pr=c((pf((anova5[1,4]/anova5[2,4]),
+                  anova5[1,4],anova5[2,4],lower.tail=F)),'',''))
+
+# Remove MS Total
+anova5[3,4] <-NA
+anova5
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(anova5, caption= "ANOVA Table", "simple")
+
+```
+
+\newpage
+
+## Audrey Robertson Question 6
+
+\
+Given the following:\
+Construct the ANOVA table.
+
+R Code:
+
+```{r 6, include=T}
+#input given information
+SSW_T1 <- 45
+SSW_T2 <- 25
+SSW_T3 <- 50
+n <- 5
+N <- 15
+t <- 3
+SSE <- SSW <- (SSW_T1+ SSW_T2+SSW_T3)
+# Given SS Total
+TSS <- 325
+# SS Total = SST + SSE
+## SST = TSS-SSE
+SST <- (TSS-SSE)
+
+# Create ANOVA Table: 
+anova6 <- data.frame(Source=c('Treatment','Error','Total'),SS=as.numeric('','', ''), df=as.numeric(c((t-1),(N-t),(N-1))));anova
+anova6[1,2] = as.numeric(SST)
+anova6[2,2] = as.numeric(SSE)
+anova6[3,2] = as.numeric(TSS)
+
+anova6 <- anova6 %>% mutate(MS=(SS/df)) 
+anova6 <- anova6 %>% mutate(Fcat=c((anova6[1,4]/anova6[2,4]),'','')) 
+anova6 <- anova6 %>% mutate(Pr=c((pf((anova6[1,4]/anova6[2,4]),
+                  anova6[1,4],anova6[2,4],lower.tail=F)),'',''))
+
+# Remove MS Total
+anova6[3,4] <-NA
+anova6
+knitr::opts_chunk$set(echo=T)
+knitr::kable(anova6, caption= "ANOVA Table", "simple")
+```
+
+\newpage
+
+## Audrey Robertson Question 7
+
+\
+In an effort to harvest corn more efficiently, an experiment was conducted to evaluate the effect of five treatments for reducing the presence of weeds. Each treatment was applied while sowing and weed counts were observed at the time of harvest.
+
+R Code:
+
+```{r 7 input, include=T}
+
+# Input Data
+d7 <- data.frame(Treatments=rep(c('A','B','C','D','E'), each=5), 
+                 Weeds=as.numeric(c(28,22,54,19,32,
+                                    7,11,30,6,11,
+                                    6,9,26,7,7,
+                                    177,151,110,117,105,
+                                    184,146,131,130,174)))
+d7$Treatments <- factor(d7$Treatments, levels=c('A','B','C','D','E'))
+
+Q7 <- data.frame(
+  A = d7[d7$Treatments == "A", "Weeds"],
+  B = d7[d7$Treatments == "B", "Weeds"],
+  C = d7[d7$Treatments == "C", "Weeds"],
+  D = d7[d7$Treatments == "D", "Weeds"],
+  E = d7[d7$Treatments == "E", "Weeds"]);t(Q7)
+
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(t(Q7), caption= 
+               "Weed Count and Different Treatments", "simple")
+```
+
+### Generate a plot of the standardized residuals against the estimated values of the treatment means. Comment on the structure of the plot and use a formal statistical test to determine whether the homogeneity of variances assumption is justified.
+
+R Code:
+
+```{r 7a, include=T}
+
+# a) Create plot of standardized resid. x est. fitted values of trt means
+d7lm <- lm(Weeds ~ Treatments, data=d7)
+summary(d7lm)
+anova(d7lm)
+
+d7a <- d7 %>% 
+  mutate(rstandard=rstandard(d7lm)) %>% 
+  group_by(Treatments) %>% 
+  mutate(GroupMean = mean(Weeds, na.rm=T));d7a
+
+
+ggplot(data=d7a, mapping = aes(x = GroupMean))+
+  geom_point(aes(y=rstandard, colour=Treatments), shape=18, size=3)+
+  labs(title = "Plot of Estimated Treatment Means Versus Residuals",
+       x= "Estimated Treatment Mean", y="Standardized Residuals")
+
+levene2 <- LeveneTest(Weeds~Treatments, data = d7, center=median)
+print("Levene's Test (Median) for Homogeneity of Variances:")
+print("Ho: All treatment variances are the same")
+print("Ha: At least one treatment variance is not the same")
+print(paste("Test Statistic =", levene2[1,2]))
+print(paste("p-value =", levene2[1,3]))
+print("Retain the null")
+
+knitr::opts_chunk$set(echo=T)
+```
+
+The spread of standardized residuals among the treatments vary. The plot shows a funnel shape which may suggest that treatment variances are not homogeneous.
+
+The p-value of the Levene's median test is 0.1991, so we retain the null hypothesis that the treatment variances are homogeneous. The plot shows concerns though.
+
+### Apply an appropriate transformation to these data. Generate a plot of the standardized residuals against the estimated values of the treatment means using the transformed data. Comment on the structure of the plot and use a formal statistical test to determine whether the homogeneity of variances assumption is justified.
+
+R Code:
+
+```{r 7b, inlcude=T}
+
+#b) Transformation
+d7b <-d7a %>%
+  group_by(Treatments) %>%
+  summarise(GroupMean=mean(Weeds, na.rm=T), GroupVariance = var(Weeds), 
+            TotalCount = sum(rstandard))
+
+#plot log variance x log mean by Treatment
+ggplot(data = d7b, mapping = aes(x = log(GroupMean), y = log(GroupVariance))) +
+  geom_point(shape = 18, size = 3) +
+  geom_smooth(method = 'lm', formula = y ~ x)+
+  labs(title = "Plot of log Variance Versus Log Mean by Treatment",
+       x= "Estimated Treatment Mean", y="Estimated Treatment Variance")
+
+#find linear model for this plot to find q
+d7blm <- lm(log(as.numeric(GroupVariance))~log(as.numeric(GroupMean)),data=d7b)
+summary(d7blm);anova(d7blm)
+#q=0.8961654
+q <- d7blm[["coefficients"]][["log(as.numeric(GroupMean))"]]
+
+knitr::opts_chunk$set(echo=T)
+
+```
+
+```{r 7b2, include=T}
+#apply transformation for q!=2
+d7t <- d7 %>% mutate(Weedst=(Weeds^(1-(q/2))));d7t
+d7tlm <- lm(Weedst ~ Treatments, data=d7t)
+
+#Create dataframe to plot standard resid and mean by treatment
+d7tp <- d7 %>% mutate(rstandard=rstandard(d7tlm)) %>% 
+  mutate(hWeeds=d7tlm$fitted.values) %>%
+  group_by(Treatments) %>% 
+  mutate(hGroupMean = mean(hWeeds, na.rm=T)) %>%
+  select(Treatments, hWeeds, hGroupMean, rstandard);d7tp
+
+#plot transformed estimated treatment means versus standard resid.
+ggplot(data=d7tp, mapping = aes(x = hGroupMean))+
+  geom_point(aes(y=rstandard, colour=Treatments), shape=18, size=3)+
+  labs(title = "Plot of Transformed Means vs Resid.",
+       x= "Estimated Treatment Mean", y="Standardized Residuals")
+
+levene3 <- LeveneTest(d7tlm, center=median)
+print("Levene's Test (Median) for Homogeneity of Variances:")
+print("Ho: All treatment variances are the same")
+print("Ha: At least one treatment variance is not the same")
+print(paste("Test Statistic =", levene3[1,2]))
+print(paste("p-value =", levene3[1,3]))
+print("Retain the null")
+
+knitr::opts_chunk$set(echo=T)
+```
+
+After transforming the data, the spread of standardized residuals among the treatments are more similar. Using the Levene's median test for homogeneity of variances, the p-value increased. This signifies that the variances are more homogeneous after the transformation.
+
+The p-value of the Levene's test is 0.938038, so we retain the null hypothesis that the treatment variances are homogeneous.
