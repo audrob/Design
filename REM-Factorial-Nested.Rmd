@@ -1,0 +1,1241 @@
+---
+title: "Module 2"
+author: "Audrey Robertson"
+date: "2024-04-05"
+output: word_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+R Packages: tidyverse, dplyr, DescTools, tinytex, knitr, markdown,
+ggplot2, car, FrF2, DoE.base, multcomp, pwr, dae, tibble
+
+```{r setup, include=F}
+
+library(tidyverse);library(dplyr);library(DescTools)
+library(tinytex);library(knitr);library(markdown)
+library(car);library(FrF2);library(DoE.base)
+library(multcomp);library(pwr);library(dae)
+library(tibble)
+
+
+```
+
+## Question 1
+
+the observations follow:
+
+R Code:
+
+```{r Q1_input, include=T}
+
+## create factors and create data frame
+t1 <- c(24.4,22.6,23.8,22.0,24.5,22.3,25.0,24.5)
+t2 <- c(10.2,12.1,10.3,10.2,9.9,11.2,12.0,19.4)
+t3 <- c(19.2,19.4,19.8,19.0,19.6,18.3,20.0,19.4)
+t4 <- c(17.4,18.1,16.7,18.3,17.6,17.5,18.0,16.4)
+t5 <- c(13.4,15.0,14.1,13.1,14.9,15.0,13.4,14.8)
+t6 <- c(21.3,20.2,20.7,20.8,20.1,18.1,21.1,20.3)
+
+q1 <- data.frame(Treat = rep(c('1', '2', '3', '4','5','6'),each=8),
+                 Obs=c(t1,t2,t3,t4,t5,t6))
+
+# set variables as factors
+q1$Treat <- as.factor(q1$Treat)
+
+t <- 6
+r <- 8
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(q1, caption= "Sodium Content of different brands", "simple")
+```
+
+### a) Write the linear statistical model for the experiment and explain the model components.
+
+R Code:
+
+```{r Q1 a, include=F}
+
+#linear regression to identify model
+q1lm<- lm(Obs~Treat, data=q1)
+summary(q1lm)
+
+knitr::opts_chunk$set(echo=T)
+```
+
+Experiment:
+
+-   Design: Completely Randomized
+
+-   Model: Random Effects
+
+The linear model is:\
+$y_{ij}=\mu+\alpha_i+\epsilon_{ij}$ $i=1,2,...,t$ $j=1,2,...,r$
+
+The model components are:
+
+-   $y_{ij}$ is the $j^{th}$ observation of the $i^{th}$ brand.
+
+-   $\mu$ is the general mean sodium content.
+
+-   $\alpha_i$ is the random brand effect.
+
+-   $\epsilon_{ij}$ is the random error of the $(ij)^{th}$ observation,
+
+### b) Assess the assumption that the error terms have a constant variance via Levene's Median Test.
+
+$H_0:$ All brand variances are the same.
+
+$H_a:$ At least one brand variance is not the same.
+
+R Code:
+
+```{r Q1 b, include=T}
+
+# Stat test for homoscedasticity
+# Levene's Test using median as center:
+
+levene1 <- LeveneTest(Obs ~ Treat, data = q1, center=median)
+levene1
+
+#conclude
+print("Levene's Test (Median) for Homogeneity of Variances:")
+print("Ho: All brand variances are the same")
+print("Ha: At least one brand variance is not the same")
+print(paste("Test Statistic =", levene1[1,2]))
+print(paste("p-value =", levene1[1,3]))
+print("Retain the null")
+
+knitr::opts_chunk$set(echo=T)
+```
+
+$F_{stat}=1.2881$
+
+$Pr(F \ge 1.2281) = 0.2872$
+
+Since the p-value is greater than the significance level of 0.05, we
+retain the null hypothesis that all brand variances are the same.
+
+### c) Calculate estimate and 90% confidence intervals for the brand and sample variance components.
+
+R Code:
+
+```{r Q1 c, include=T}
+
+# Calculate the mean for each Treat
+mean_t <- aggregate(Obs ~ Treat, data = q1, FUN = mean)
+# Calculate SSB and SSW
+SSA <- sum((q1$mean_t - mean(q1$Obs))^2)
+SSW <- sum((q1$Obs - q1$mean_t)^2)
+
+# Calculate dfB and dfW
+dfA <- t - 1
+dfW <-  t*(r-1)
+
+# Calculate MSB and MSW
+MSA <- SSA / dfA
+MSW <- SSW / dfW
+
+# Print the results
+cat("MSA =", round(MSA, 4), "\n")
+cat("MSW =", round(MSW, 4), "\n") #\hat{\sigma^2_e}
+
+var_e <- MSW 
+var_e #\hat{sigma^2_\e}
+
+# Error Variance
+# 2-sided 90% CI for #\hat{\sigma^2_e}
+## df = t*(r-1)
+
+#calculate chi-squared statistics for denominators
+alpha <- 0.1
+XcritL <- qchisq(0.05,dfW, lower.tail=F)
+XcritU <- qchisq(0.95,dfW, lower.tail=F)
+
+CI_L <- (dfW*MSW)/XcritL # Lower Bound
+CI_U <- (dfW*MSW)/XcritU # Upper Bound
+
+print(paste("95% Confidence Interval for Error Variance Component:(",round(CI_L, 3),",", round(CI_U, 3),")"))
+
+# Brand Variance
+# Confidence Interval for the variance component (\hat{\sigma^2_\tau})
+# 1- 2*alpha 
+  ## Use alpha = 0.05 for 90% CI
+
+var_a <- (MSA - MSW) / r
+var_a #\hat{sigma^2_\tau}
+
+alpha <- 0.05
+# calculate F statistics for numerator
+F0 <- MSA/MSW
+Fu <- qf(alpha/2, dfA, dfW, lower.tail = F)
+Fl <- qf(1-(alpha/2), dfA, dfW, lower.tail = F)
+
+#calculate components for denominator
+C <- qchisq(alpha/2, dfA, lower.tail = F)
+D <- qchisq(1-(alpha/2), dfA, lower.tail = F)
+
+CIt_L <- (SSA*(1-(Fu/F0))) / (r*C) # Lower Bound
+CIt_U <- (SSA*(1-(Fl/F0))) / (r*D) # Upper Bound
+print(paste("95% Confidence Interval for Treatment Variance Component:(",round(CIt_L, 3),",", round(CIt_U, 3),")"))
+
+knitr::opts_chunk$set(echo=T)
+```
+
+$\hat\sigma_{e}^2 = MSW = 2.267857$
+
+90% Confidence interval for $\hat\sigma_{e}^2$:$(1.638737,3.38474)$
+
+$\hat\sigma_{a}^2 = (MSA-MSW)/r = 17.80375$
+
+90% Confidence interval for $\hat\sigma_{a}^2$:$(6.728587,108.5239)$
+
+### d) Calculate an estimate and 90% confidence interval for the intra-class correlation coefficient. Interpret the results.
+
+$H_0:\rho_i=0$
+
+$H_a:\rho_i \ne 0$
+
+R Code:
+
+```{r Q1 d, include=T}
+
+rho_i <- var_a/(var_a + var_e)
+print(rho_i)
+# 2-sided 90% CI for variance ratio
+## df = t*(r-1)
+FcritL <- qf(0.05, dfA, dfW, lower.tail=F)
+FcritU <-1/qf(0.05,dfW,dfA, lower.tail=F)
+FcritU <- qf(0.05,dfA,dfW) #same as above
+
+CI_L <- ((MSA/MSW)*(1/FcritL)-1)/4
+CI_U <- ((MSA/MSW)*(1/FcritU)-1)/4
+
+#95% CI on \hat{sigma^2_\tau} / (\hat{sigma^2_\tau} + \hat{\sigma^2_e})
+
+CIs_L <- CI_L / (CI_L + 1)
+CIs_U <- CI_U / (CI_U + 1)
+print(paste("95% Confidence Interval for Intra-Class Correlation:(",round(CIs_L, 3),",", round(CIs_U, 3),")"))
+# if the CI included 0, there would be no correlation
+# wide range : small # r
+# Same as Fisher's Method
+
+knitr::opts_chunk$set(echo=T)
+```
+
+The confidence interval does not include 0, so we reject the null
+hypothesis. There is evidence for intra-class correlation between the
+brands.
+
+### e) Construct an ANOVA table including the expected mean square in tabular form as shown below. Test the null hypothesis that the variance of the brands = 0. Use significance level = 0.05.
+
+$H_0:\sigma^2_a=0$
+
+$H_a:\sigma^2_a \ne 0$
+
+R Code:
+
+```{r Q1 e, include=T}
+# ANOVA table
+q1anova<-as.data.frame(anova(q1lm))
+q1anova
+
+
+#add E(MS) column to add equations
+Expected_MS <- c("","")
+q1anova <- add_column(q1anova, Expected_MS, .after="Mean Sq")
+q1anova[is.na(q1anova)] <- ""
+q1anova
+
+
+knitr::opts_chunk$set(echo=T)
+kable(q1anova,caption="ANOVA Table","simple")
+
+```
+
+$Pr(F \ge 63.8038) = 1.5875 * 10^{-18}$
+
+Since the p-value is less than the significance level, reject the null.
+
+### f) Suppose the researcher is able to sample eight brands and wants to detect a 30% increase in the standard deviation ratio with a power of at least .90 at the 0.05 significance level. What is the minimum number of samples required from each brand to satisfy these conditions?
+
+R Code:
+
+```{r Q1 f, include=T}
+
+# Calculating by hand and using appendix X
+# We want increase in SD sigma_y over sigma_e of p=25
+  # With power of at least 80% at the 5% level of sig.
+p <- 30
+des_pow <- .9
+alpha <- 0.05
+t <- 6
+
+
+# For r=6 replications
+r <-6
+req_ratio <- (1 + (p*0.01))^2 -1
+lambda_sq <- 1 + r * (req_ratio)
+sqrt(lambda_sq)
+v1 <- t-1
+v2 <- t*(r-1);v2
+# Use power charts Appendix X
+## Plot power (1- beta) versus Lambda
+# value of 1- beta is between 0.8 and 0.9
+
+# For r=8 replications
+r <-8
+req_ratio <- (1 + (p*0.01))^2 -1
+lambda_sq <- 1 + r * (req_ratio)
+sqrt(lambda_sq)
+v1 <- t-1
+v2 <- t*(r-1);v2
+# Use power charts Appendix X
+## Plot power (1- beta) versus Lambda
+# value of 1- beta is between 0.8 and 0.9
+
+# For r=10 replications
+r <- 10
+req_ratio <- (1 + (p*0.01))^2 -1
+lambda_sq <- 1 + r * (req_ratio)
+sqrt(lambda_sq)
+v1 <- t-1
+v2 <- t*(r-1);v2
+# Use power charts Appendix X
+## Plot power (1- beta) versus Lambda
+# value of 1- beta is between 0.90 and 0.92
+
+# For r=11 replications
+r <- 11
+req_ratio <- (1 + (p*0.01))^2 -1
+lambda_sq <- 1 + r * (req_ratio)
+sqrt(lambda_sq)
+v1 <- t-1
+v2 <- t*(r-1);v2
+# Use power charts Appendix X
+## Plot power (1- beta) versus Lambda
+# value of 1- beta is between 0.96 and 0.97
+
+
+# we need 10 replications to detect an increase of 30% or more in SD due to
+  # the treatments
+
+
+#using pwr package
+pwra <- pwr.f2.test(u=5,
+            v=NULL,
+            f2=0.30,
+            sig.level=0.05,
+            power=.9)
+v2_req <- (pwra[["v"]]/6)+1
+print(v2_req)
+# required replications = 10.11 ~ 11
+
+knitr::opts_chunk$set(echo=T)
+```
+
+We need at least 10 replications (for each brand) to detect an increase
+of 30% or more in standard deviation due to the brands with a power of
+at least 0.90.
+
+\newpage
+
+## Question 2
+
+The data are given below.
+
+R Code:
+
+```{r Q2 input, include=T}
+# create df
+q2 <- data.frame(Pressure = rep(c('120','130','140','150'), each=3),
+                 Texture = rep(c('A','B','C'),times=4),
+                 Obs = c(9.60,11.28,9.00,
+                         9.69,10.10,9.57,
+                         8.43,11.01,9.03,
+                         9.98,10.44,9.80))
+
+# set variables as factors
+q2$Pressure <- as.factor(q2$Pressure)
+q2$Texture <- as.factor(q2$Texture)
+# 4 x 3 Factorial Design 
+# Fixed effects model
+
+knitr::opts_chunk$set(echo=T)
+```
+
+### a) Write the linear statistical model for this experiment and explain the model components.
+
+Experiment:
+
+-   Design: 4x3 Factorial
+
+-   Model: Fixed Effects
+
+$y_{ijk}=\mu + \alpha_i + \beta_j + (\alpha\beta)_{ij}+\epsilon_{ijk}$
+
+The model components are:
+
+-   $y_{ijk}$ is the $k^{th}$ observation at the $i^{th}$ level of
+    Pressure (A) and the $j^{th}$ level of Texture (B)
+
+-   $\mu$ is the overall mean effect
+
+-   $\alpha_i$ is the fixed Pressure effect
+
+-   $\beta_j$ is the fixed Texture effect
+
+-   $(\alpha\beta)_{ij}$ is the interaction effect of Pressure and
+    Texture
+
+-   $\epsilon_{ijk}$ is the random error of the $(ijk)^{th}$ observation
+
+### b) Construct an ANOVA table in the form shown below. State the null and alternative hypotheses for the main effects and non-additivity. Test each of the hypotheses and interpret the results. Use significance level of 0.05.
+
+#### ANOVA
+
+R Code:
+
+```{r Q2 ANOVA, include=T}
+q2model <- lm(Obs ~ Pressure + Texture, data=q2)
+q2model
+q2anova <- anova(q2model)
+q2anova
+summary(aov(Obs ~ Pressure + Texture, data=q2))
+
+q2model_interaction <- lm(Obs ~ Pressure * Texture, data = q2)
+q2anova_interaction <- anova(q2model_interaction)
+q2anova_interaction
+summary(aov(Obs ~ Pressure*Texture, data=q2))
+
+# Interaction is equal to error. NO INTERACTION EFFECT. no non-additivity
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(q2anova, caption= "ANOVA Table", "simple")
+```
+
+#### Main effect of Pressure
+
+$H_0: \alpha_i = 0$
+
+$H_a: \alpha_i \ne 0$
+
+$F_{stat} = 0.5392$
+
+$Pr(F>0.5392)=0.67270$
+
+Since p-value is greater than the significance level, we retain the
+null.
+
+#### Main effect of Texture
+
+$H_0: \beta_j = 0$
+
+$H_a: \beta_j \ne 0$
+
+$H_0: \mu_j = 0$
+
+$H_a: \mu_j \ne 0$
+
+$F_{stat} = 6.4873$
+
+$Pr(F>0.5392)=0.03162$
+
+Since p-value is less than the significance level, we reject the null.
+
+#### Non-additivity
+
+$H_0: \lambda = 0$
+
+$H_a: \lambda \ne 0$
+
+R Code:
+
+```{r Q2 non-additivity, include=T}
+
+# Using dae package, 1 df tukey test
+model <- aov(Obs ~ Pressure + Texture, data=q2)
+tukey.1df(model,data=q2,error.term="Residuals")
+
+#calculating by hand
+#find mean for Pressure levels
+mean_i <- aggregate(Obs ~ Pressure, data = q2, FUN = mean)
+mean_i
+
+# F = MSN/MSE
+# SSN = P^2/(mean_i-mean)^2 * (mean_j - mean)^2
+# P = sum(P_j * (mean_j-mean))
+# P_j = sum(y_ijk *(mean_i-mean))
+
+P_j <- c(0.4848616657,-0.06719167,0.163266659)
+
+mean_j <- aggregate(Obs ~ Texture, data = q2, FUN = mean)
+
+# P = sum(P_j * (mean_j-mean))
+P <- sum((P_j)*(mean_j$Obs-mean(q2$Obs)))
+
+# SSN = P^2/(mean_i-mean)^2 * (mean_j - mean)^2
+SSN <- (P^2)/
+  (sum((mean_i$Obs-mean(q2$Obs))^2) * sum((mean_j$Obs-mean(q2$Obs))^2))
+SSE <- q2anova_interaction[3,2] - SSN
+
+#MSN = SSN/1
+#MSE = SSE/(a-1)(b-1) -1
+MSN <- SSN/1
+MSE <- SSE/((3*2)-1)
+
+# F = MSN/MSE
+F_stat <- MSN/MSE 
+print(F_stat)
+
+F_crit <- qf(0.05,1,5,lower.tail = F)
+print(F_crit)
+
+#Create full ANOVA table
+Error <- c(5,SSE,MSE,F_stat,0.279)
+Non_Additivity <- c(1,SSN,MSN,"","")
+
+q2anova <- as.data.frame(q2anova)
+
+# add rows, rename rows
+q2anova <- rbind(q2anova, Error, Non_Additivity)
+row.names(q2anova)[row.names(q2anova) == "4"] <- "Error"
+row.names(q2anova)[row.names(q2anova) == "5"] <- "Non-Additivity"
+row.names(q2anova)[row.names(q2anova) == "Residuals"] <- "Interaction"
+
+#Replace NA with blank value
+q2anova[is.na(q2anova)] <- ""
+q2anova
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(q2anova, caption= "ANOVA Table", "simple")
+```
+
+$F_{stat} = 1.47154$
+
+$F_{crit} = 6.607891$
+
+$Pr(F \ge 1.47154) = 0.279$
+
+Since the p-value is greater than the significance level, we retain the
+null. There is no non-additivity. There is no interaction in the model
+and we are able to test the main effects.
+
+\newpage
+
+## Audrey Robertson Question 3
+
+The data table is below:
+
+R Code:
+
+```{r Q3 inpute, include=T}
+# create df
+q3 <- data.frame(
+  Levorphanol = rep(c('A1', 'A2'),each=10),
+  Epinephrine = rep(c('B1', 'B2'),times=10),
+  Obs = c(1.90,5.33,1.80,4.84,1.54,5.26,1.10,4.92,1.89,6.07,
+         0.82,3.08,3.36,1.42,1.64,3.54,1.74,1.25,1.21,2.57))
+
+# set variables as factors
+q3$Levorphanol <- factor(q3$Levorphanol)
+q3$Epinephrine <- factor(q3$Epinephrine)
+q3
+
+knitr::opts_chunk$set(echo=T)
+```
+
+### a) Rewrite the table above in the form of a 2\^2 factorial experiment. Classify each factor as random or fixed.
+
+Experiment:
+
+-   Design: 2\^2 Factorial
+
+-   Model: Fixed Effects
+
+### b) Write the linear statistical model for this experiment and explain the model components.
+
+$y_{ij} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \epsilon_{ijk}$
+
+The model components are:
+
+-   $y_{ijk}$ is the $k^{th}$ observation of the $i^{th}$ level of
+    Levorphanol of the $j^{th}$ level of Epinephrine
+
+-   $\mu$ is the overall mean effect
+
+-   $\alpha_i$ is the fixed Levorphanol effect of the $i^{th}$ level
+
+-   $\beta_j$ is the fixed Epinepherine effect of the $j^{th}$ level
+
+-   $(\alpha\beta)_{ij}$ is the fixed interaction term at the $i^{th}$
+    level of Levorphanol and the $j^{th}$ level of Epinephrine
+
+-   $\epsilon_{ijk}$ is the random error of the $(ijk)^{th}$ observation
+
+### c) Use Levene's Median Test to asses the assumption that error terms have a constant variance.
+
+$H_0:$ All treatment variances are the same.
+
+$H_a:$ At least one treatment variance is not the same.
+
+R Code:
+
+```{r Q3 c, include=T}
+# Stat test for homoscedasticity
+# Levene's Test using median as center:
+
+# Fit the linear model
+q3lm <- lm(Obs ~ Levorphanol * Epinephrine, data = q3)
+# Summarize the model
+summary(q3lm)
+
+# Levene's Test for homogeneity of variances
+levene2 <- leveneTest(q3lm, center = "median")
+
+# View the results
+print(levene2)
+
+#conclude
+print("Levene's Test (Median) for Homogeneity of Variances:")
+print("Ho: All error variances are the same")
+print("Ha: At least one treatment variance is not the same")
+print(paste("Test Statistic =", levene2[1,2]))
+print(paste("p-value =", levene2[1,3]))
+print("Reject the null")
+
+knitr::opts_chunk$set(echo=T)
+```
+
+$F_{stat}=1.3935$
+
+$Pr(F \ge 1.2281) = 0.281$
+
+Since the p-value is greater than the significance level of 0.05, we
+retain the null hypothesis that all brand variances are the same.
+
+### d) Construct an ANOVA table including the expected mean squares in tabular form as shown below. State the null and alternative hypotheses for the main effects and interaction. Test each of the hypotheses and interpret the results. Use a significance level of 0.05.
+
+R Code:
+
+```{r Q3 ANOVA, inlcude=T}
+# https://www.r-bloggers.com/2013/01/formulae-in-r-anova-and-other-models-mixed-and-fixed/
+q3anova <- anova(q3lm)
+
+q3anova <- as.data.frame(q3anova)
+
+
+#add E(MS) column to add equations
+Expected_MS <- c("","","","")
+q3anova <- add_column(q3anova, Expected_MS, .after="Mean Sq")
+q3anova[is.na(q3anova)] <- ""
+
+knitr::opts_chunk$set(echo=T)
+kable(q3anova,caption="ANOVA Table", "simple")
+```
+
+#### Main effect of Levorphanol
+
+$H_0: \alpha_i = 0$
+
+$H_a: \alpha_i \ne 0$
+
+$F_{stat} = 17.0222$
+
+$Pr(F>17.0222)=0.0008$
+
+Since p-value is less than the significance level, we reject the null.
+
+#### Main effect of Epinephrine
+
+$H_0: \beta_i = 0$
+
+$H_a: \beta_i \ne 0$
+
+$F_{stat} = 39.21596$
+
+$Pr(F>39.21596)< 0.0001$
+
+Since p-value is less than the significance level, we reject the null.
+
+#### Interaction effect of Levorphanol and Epinephrine
+
+$H_0: (\alpha\beta)_{ij} = 0$
+
+$H_a: (\alpha\beta)_{ij} \ne 0$
+
+$F_{stat} = 19.7457$
+
+$Pr(F>19.7457)< 0.0004$
+
+Since p-value is less than the significance level, we reject the null.
+
+### e) Calculate estimates and 95% simulataneous confidence intervals of each of the 6 elementary contrasts
+
+R Code:
+
+```{r Q3 CI, include=T}
+
+# Use linear model q3lm
+# Create the contrast matrix
+contrast_matrix <- rbind(
+  c(1, -1, 0, 0),   # A1B1 vs A1B2
+  c(0, 0, 1, -1),   # A2B1 vs A2B2
+  c(1, 0, -1, 0),   # A1B1 vs A2B1
+  c(0, 1, 0, -1),   # A1B2 vs A2B2
+  c(1, 0, 0, -1),   # A1B1 vs A2B2
+  c(0, 1, -1, 0))   # A1B2 vs A2B1
+
+# name each contrast
+rownames(contrast_matrix) <- c(
+  "A1B1 vs A1B2",
+  "A2B1 vs A2B2",
+  "A1B1 vs A2B1",
+  "A1B2 vs A2B2",
+  "A1B1 vs A2B2",
+  "A1B2 vs A2B1")
+
+# using multcomp package
+# length(coef(model)) must equal ncol(contrast)
+contrasts <- glht(q3lm, linfct = contrast_matrix)
+
+# Simultaneous 95% CIs for each contrast coef
+CI_c <- confint(contrasts, level = 0.95)
+CI_cs<- summary(CI_c) #summary of confint to show significance
+print(CI_c) # No confidence intervals contain 0
+
+
+
+# Using Bonferroni's 95% simultaneous confidence intervals
+# Calculate the mean for each combination
+q3mean <- q3 %>%
+  group_by(Levorphanol, Epinephrine) %>%
+  summarise(mean_obs = mean(Obs))
+
+
+
+# Compute the point estimates and standard errors
+C1 <- q3mean[1,3] - q3mean[2,3]
+C2 <- q3mean[3,3] - q3mean[4,3]
+C3 <- q3mean[1,3] - q3mean[3,3]
+C4 <- q3mean[2,3] - q3mean[4,3]
+C5 <- q3mean[1,3] - q3mean[4,3]
+C6 <- q3mean[2,3] - q3mean[3,3]
+
+contrasts <- data.frame(Contrast=c(
+  "A1B1 vs A1B2", "A2B1 vs A2B2", "A1B1 vs A2B1",
+  "A1B2 vs A2B2", "A1B1 vs A2B2", "A1B2 vs A2B1"),
+  Estimate=t(as.data.frame(c(C1,C2,C3,C4,C5,C6))),
+  row.names=NULL
+  )
+
+# t critical value for Bonferroni's CI
+# Adjust alpha to calculate the Bonferroni t-value using the student t 
+  # distribution 
+# Adjusted_Alpha = alpha/(2*k). k = number of comparisons
+# df = df for bonferroni (N-t)
+
+t_crit <- qt(1 - (0.05 / (2 * 6)), df = 16)
+
+# Calculate ME of contrasts
+r <- 5
+ME <- t_crit * sqrt(q3anova[4,3] * (1/r + 1/r))
+
+# calculate upper and lower values for all contrast CIs
+
+contrasts <- contrasts %>% 
+  mutate(CI_Lower = Estimate - ME) %>%
+  mutate(CI_Upper = Estimate + ME)
+
+# H_0: C_i = 0
+# H_a: C_i != 0
+  # if the CI includes 0, the null is retained
+  # C1, C4, C6 do not include 0
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(contrasts, caption= "Bonferroni's 95% Confidence Intervals", "simple")
+
+```
+
+\newpage
+
+## Audrey Robertson Question 4
+
+The observed data are given below.
+
+R Code:
+
+```{r Q4 input, include=T}
+# create data frame
+q4 <- data.frame(Plant = rep(c('1','2','3','4'), each=6),
+                 Leaf = rep(c('1','2','3'),each=2, times=4),
+                 Calcium = c(3.28,3.09,3.52,3.48,2.88,2.80,
+                            2.46,2.44,1.87,1.92,2.19,2.19,
+                            2.77,2.66,3.74,3.44,2.55,2.55,
+                            3.78,3.87,4.07,4.12,3.31,3.31))
+
+# set variables as factors
+q4$Plant <- as.factor(q4$Plant)
+q4$Leaf <- as.factor(q4$Leaf)
+
+knitr::opts_chunk$set(echo=T)
+```
+
+### a) Write the linear statistical model for this experiment and explain the model components.
+
+Experiment:
+
+-   Design: 2-Stage Nested
+
+-   Model: Mixed Effects
+
+-   Plant: Fixed
+
+-   Leaf: Random
+
+$y_{ijk}=\mu + \alpha_i + \beta_{j(i)} + \epsilon_{(ij)k}$
+
+The model components are:
+
+-   $y_{ijk}$ is the $k^{th}$ observation of the $j^{th}$ level of Leaf
+    nested within the $i^{th}$ level of Plant
+
+-   $\mu$ is the overall mean effect
+
+-   $\alpha_i$ is the fixed effect of the $i^{th}$ level of Plant
+
+-   $\beta_{j(i)}$ is the random effect of the $j^{th}$ level of Leaf
+
+-   $\epsilon_{(ij)k}$ is the random error of the $k^{th}$
+    replicate/observation nested in $(ij)^{th}$ combination of levels of
+    B nested in A
+
+### b) Construct an anova table including the expected mean squares in tabular form as shown below. State the null and alternative hypotheses for all model effects. Test each of the hypotheses, and interpret the results. Use a significance level of 0.05.
+
+R Code:
+
+```{r Q4 b, include=T}
+
+q4lm <- lm(Calcium ~ Plant + Plant:Leaf, data=q4)
+summary(q4lm)
+anova(q4lm)
+
+# mixed effects model 
+# Plant is fixed effect
+# Leaf is random effect 
+
+q4anova<-as.data.frame(anova(q4lm))
+q4anova
+
+n <- 2  # 2 obs per leaf within plant
+a <- 4 # 4 plant strain
+b <- 3 # 3 leaf per plant
+dfA <- a-1
+dfB_A <- a*(b-1)
+dfE <- a*b*(n-1)
+  
+# Correct F statistic and p-val for Plant
+# Use MSB(A) as the denominator instead of MSE
+F_A <- q4anova[1,3]/q4anova[2,3]
+q4anova[1,4] <- F_A
+
+p_A <- pf(F_A,dfA,dfE,lower.tail = F)
+q4anova[1,5] <- p_A
+
+# add blank column for E(MS) formulas
+Expected_MS <- c("","", "")
+q4anova <- add_column(q4anova, Expected_MS, .after="Mean Sq")
+q4anova[is.na(q4anova)] <- ""
+
+
+knitr::opts_chunk$set(echo=T)
+kable(q4anova, caption="ANOVA Table","simple")
+```
+
+#### Plant Effects:
+
+$H_0:\alpha_i = 0$
+
+$H_a:\alpha_i \ne 0$
+
+$F_{stat}= MSA/MSB(A) = 7.6652$
+
+$Pr(F \ge |7.6652|) = 0.004$
+
+Since the p-value of the test statistic is less than the significance
+level, we reject the null. This term is not testable as E(MSA) has both
+coefficient and variance components.
+
+#### Leaf nested within Plant Effects:
+
+$H_0:\sigma^2_\beta = 0$
+
+$H_a:\sigma^2_\beta \ne 0$
+
+$F_{stat}= MSB(A)/MSE = 49.4089$
+
+$Pr(F \ge |49.4089|) = 5.090448 * 10^{-8}$
+
+Since the p-value of the test statistic is less than the significance
+level, we reject the null.
+
+### c) Estimate the three variance components
+
+R Code:
+
+```{r Q4 C, include=T}
+
+# Find variance components
+n <- 2  # 2 obs per leaf within plant
+a <- 4 # 4 plant strain
+b <- 3 # 3 leaf per plant
+  
+var_e <- q4anova[3,3] # var_e = MSW for estimation
+var_b <- (q4anova[2,3]-q4anova[3,3]) / n
+
+mean_i <- aggregate(Calcium ~ Plant, data = q4, FUN = mean)
+mean_i
+theta_sq_a <- sum((mean_i$Calcium-mean(q4$Calcium))^2) / (a-1)
+
+var_e;var_b;theta_sq_a
+
+
+knitr::opts_chunk$set(echo=T)
+```
+
+Estimates for the variance components:
+
+-   $\hat\sigma^2_e = 0.00665$
+
+-   $\hat\sigma^2_b = 0.16106$
+
+-   $\hat\theta^2_a = 0.42002$
+
+### d) Determine the percentage of the overall variation that can be attributed to leaf-leaf variation.
+
+R Code:
+
+```{r Q4 d, include=T}
+
+# Find ICC for Leaf
+# Intra-class correlation (Fisher) Measure
+rho_I <- var_b / (var_b + var_e)
+rho_I
+
+
+knitr::opts_chunk$set(echo=T)
+```
+
+$\rho_I = 0.960325$
+
+96.0325% of variation can be attributed to leaf-leaf variation.
+
+### e) Calculate estimates and 95% confidence intervals for the mean calcium concentration of each plant.
+
+R Code:
+
+```{r Q4 e, include=T}
+
+# use lm object to calculate confidence intervals
+q4lm
+confint(q4lm,level=0.95) 
+
+
+#https://stackoverflow.com/questions/26923862/why-are-my-dplyr-group-by-summarize-not-working-properly-name-collision-with
+#detach(package:plyr) #detach to fix group_by in dplyr
+
+# Calculate mean and confidence intervals
+CI_m <- q4 %>%
+  group_by(Plant) %>%
+  summarise(
+    mean_calcium = mean(Calcium),
+    sd_calcium = sd(Calcium),
+    n = 6
+  ) %>%
+  mutate(
+    CI_L = mean_calcium - qt(0.975, df = n-1) * (sd_calcium / sqrt(n)),
+    CI_U = mean_calcium + qt(0.975, df = n-1) * (sd_calcium / sqrt(n))
+  ) 
+
+
+
+knitr::opts_chunk$set(echo=T)
+kable(CI_m, caption="95% Confidence Intervals","simple")
+```
+
+## Audrey Robertson Question 5
+
+The data are given below.
+
+### a) It is determined that factor (D) is no longer needed for the study. Show the design collapsed into a 2\^3 factorial design.
+
+R Code:
+
+```{r Q5 input, include=T}
+# create df
+q5 <- data.frame(Treatment=c("(1)","A","B","AB","C","AC","BC","ABC"),
+                 Temp=c("A1","A2","A1","A2","A1","A2","A1","A2"),
+                 Catalyst=c("B1","B1","B2","B2","B1","B1","B2","B2"),
+                 Time=c("C1","C1","C1","C1","C2","C2","C2","C2"),
+                 Weight=c(2400,2410,2315,2510,2615,2625,2400,2750))
+
+# set variables as factors
+q5$Temp <- as.factor(q5$Temp)
+q5$Catalyst <- as.factor(q5$Catalyst)
+q5$Time <- as.factor(q5$Time)
+
+knitr::opts_chunk$set(echo=T)
+```
+
+### b) Write the linear statistical model for part (a), and explain the model components. Assume the model including factors (A), (B), and (C) is appropriate for the remainder of this exercise.
+
+Experiment:
+
+-   Design: 2\^3 Factorial
+
+-   Model: Mixed Effects
+
+-   A and C: Fixed
+
+-   B: Random
+
+$y_{ijkl}= \mu + \tau_i + \beta_j + \gamma_k + (\tau\beta)_{ij} + (\tau\gamma)_{ik} + (\beta\gamma)_{jk} + (\tau\beta\gamma)_{ijk} + \epsilon_{ijkl}$
+
+The model components are:
+
+-   $y_{ijkl}$ is the $l^{th}$ observation at the $i^{th}$ level of A,
+    the $j^{th}$ level of B and the $k^{th}$ level of C
+
+-   $\mu$ is the overall mean effect
+
+-   $\tau_i$ is the main effect of the $i^{th}$ level of A
+
+-   $\beta_j$ is the main effect of the $j^{th}$ level of B
+
+-   $\gamma_k$ is the main effect of the $k^{th}$ level of C
+
+-   $(\tau\beta)_{ij}$ is the interaction term at the $i^{th}$ level of
+    A and the $j^{th}$ level of B
+
+-   $(\tau\gamma)_{ik}$ is the interaction term at the $i^{th}$ level of
+    A and the $k^{th}$ level of C
+
+-   $(\beta\gamma)_{jk}$ is the interaction term at the $j^{th}$ level
+    of B and the $k^{th}$ level of C
+
+-   $(\tau\beta\gamma)_{ijk}$ is the interaction term at the $i^{th}$
+    level of A, $j^{th}$ level of B, and the $k^{th}$ level of C
+
+-   $\epsilon_{ijk}$ is the random error of the $(ijkl)^{th}$
+    observation
+
+### c) Construct an ANOVA table including the expected mean squares in tabular form as shown below. State the null and alternative hypotheses for main effects and interaction. Test each of the hypotheses and interpret your results. Use a significance level of 0.05.
+
+R Code:
+
+```{r Q5 c , include=T}
+
+# experiment information
+a <- 2
+b <- 2
+c <- 2
+r <- 1
+
+# fit linear model
+q5lm <- lm(Weight ~ Temp + Catalyst + Time, data=q5)
+q5anova <- as.data.frame(anova(q5lm))
+q5anova
+q5lmi <- lm(Weight ~ Temp * Catalyst * Time, data=q5)
+q5anovai <- as.data.frame(anova(q5lmi))
+
+q5anovaf <- rbind(q5anova,q5anovai[4:7,1:5])
+q5anovaf
+
+
+# Using dae package, 1 df tukey test
+q5aov <- aov(Weight ~ Temp + Catalyst + Time, data=q5)
+tukey.1df(q5aov,data=q5,error.term="Residuals")
+# No non-additivity 
+
+# correct F and P vals
+# Synthesize F_stat
+a <- 2
+b <- 2 
+c <- 2
+r <- 1
+
+#A
+q5anovaf[1,4]<- F_A <- (q5anovaf[1,3]/q5anovaf[5,3]) #MSA/MSAC
+q5anovaf[1,5]<- p_A <- qf(F_A, 1, 1, lower.tail = F) #0.483
+q5anovaf[1,5]<- p_A <- 0.483
+
+#B
+q5anovaf[2,4]<- F_B <- ((q5anovaf[2,3]+q5anovaf[8,3])/ # MSB+MSABC / MSAB+MSBC
+                          (q5anovaf[5,3]+q5anovaf[7,3])) 
+q5anovaf[2,5]<- p_B <- qf(F_B, 1, 1, lower.tail=F) #0.796
+q5anovaf[2,5]<- p_B <- 0.796
+
+#C
+q5anovaf[3,4]<- F_C <- (q5anovaf[3,3]/q5anovaf[7,3]) #MSC/MSBC
+q5anovaf[3,5]<- p_C <- qf(F_C, 1, 1, lower.tail=F) #0.088 or #0.019
+q5anovaf[3,5]<- p_C <- 0.019
+
+#AB
+q5anovaf[5,4]<- F_AB <- (q5anovaf[5,3]/q5anovaf[8,3]) #MSAB/MSABC
+q5anovaf[5,5]<- p_AB <- qf(F_C, 1, 1, lower.tail=F) #0.183
+q5anovaf[5,5]<- p_AB <- 0.183
+
+#AC
+q5anovaf[6,4]<- F_AC <- (q5anovaf[6,3]/q5anovaf[8,3]) #MSAC/MSABC
+q5anovaf[6,5]<- p_AC <- qf(F_AC, 1, 1, lower.tail=F) #0?
+q5anovaf[6,5]<- p_AC <- 0
+
+#BC
+q5anovaf[7,4]<- F_BC <- (q5anovaf[7,3]/q5anovaf[8,3]) #MSBC//MSABC
+q5anovaf[7,5]<- p_BC <- qf(F_BC, 1, 1, lower.tail=F) #0.622
+q5anovaf[7,5]<- p_BC <- 0.622
+  
+#ABC
+q5anovaf[8,4]<- F_ABC <- (q5anovaf[8,3]/q5anovaf[4,3]) #MSABC/MSE
+q5anovaf[8,5]<- p_ABC <- qf(F_ABC, 1, 4, lower.tail=F) #0.62
+q5anovaf[8,5]<- p_ABC <- 0.62
+
+Expected_MS <- rep(c("",""),times=4)
+q5anovaf <- add_column(q5anovaf, Expected_MS, .after="Mean Sq")
+q5anovaf[is.na(q5anovaf)] <- ""
+q5anovaf
+knitr::opts_chunk$set(echo=T)
+
+knitr::opts_chunk$set(echo=T)
+knitr::kable(q5anovaf, caption= "ANOVA Table", "simple")
+```
+
+#### Calculations for Contrasts and Hypothesis Tests:
+
+##### Main Effect of A
+
+$A=\frac{1}{4}(-(1)+a+b+ab-c+ac-bc+abc)$ $=\frac{565}{4}=141.25$
+
+$SS_{A}=\frac{(contrast_a)^2}{2^3}$ $=\frac{565^2}{8}=39903.125$
+
+$H_0: \tau_i = 0$
+
+$H_a: \tau_i \ne 0$
+
+This term is not testable as E(MSA) has both coefficient and variance
+components.
+
+$F_{stat}= MSA/MSAB=1.1582$
+
+$Pr(F>F_{stat})=0.483$
+
+Since the p-value is greater than the significance level, reject the
+null.
+
+##### Main Effect of B
+
+$B=\frac{1}{4}(-(1)-a+b+ab-c-ac+bc+abc)$ $=\frac{-75}{4}=-18.75$
+
+$SS_{B}=\frac{(contrast_b)^2}{2^3}$ $=\frac{-75^2}{8}=703.125$
+
+$H_0: \sigma^2_\beta = 0$
+
+$H_a: \sigma^2_\beta \ne 0$
+
+$F_{stat}= MSB + MSABC /MSAB + MSAC =0.1034$
+
+$Pr(F>F_{stat})=0.796$
+
+Since the p-value is greater than the significance level, retain the
+null.
+
+##### Main Effect of C
+
+$C=\frac{1}{4}(-(1)-a-b-ab+c+ac+bc+abc)$ $=\frac{755}{4}=188.75$
+
+$SS_{C}=\frac{(contrast_c)^2}{2^3}$ $=\frac{755^2}{8}=71253.125$
+
+$H_0: \gamma_k = 0$
+
+$H_a: \gamma_k \ne 0$
+
+This term is not testable as E(MSC) has both coefficient and variance
+components.
+
+$F_{stat}= MSC/MSAB=51.7029$
+
+$Pr(F>F_{stat})=0.019$
+
+Since the p-value is less than the significance level, reject the null.
+
+##### Interaction Effect of AB
+
+$AB=\frac{1}{4}((1)-a-b+ab+c-ac-bc+abc)$ $=\frac{525}{4}=131.25$
+
+$SS_{AB}=\frac{(contrast_{ab})^2}{2^3}$ $=\frac{525^2}{8}=34453.125$
+
+$H_0: \sigma^2_{\tau\beta} = 0$
+
+$H_a: \sigma^2_{\tau\beta} \ne 0$
+
+$F_{stat}= MSAB /MSABC =11.4724$
+
+$Pr(F>F_{stat})=0.183$
+
+Since the p-value is greater than the significance level, reject the
+null.
+
+##### Interaction Effect of AC
+
+$AC=\frac{1}{4}((1)-a+b-ab-c+ac-bc+abc)$ $=\frac{155}{4}=38.75$
+
+$SS_{AC}=\frac{(contrast_{ac})^2}{2^3}$\
+$=\frac{155^2}{8}=3003.125$
+
+$H_0: \sigma^2_{\tau\gamma} = 0$
+
+$H_a: \sigma^2_{\tau\gamma} \ne 0$
+
+This term is not testable as E(MSAC) has both coefficient and variance
+components.
+
+$F_{stat}= MSAC /MSABC =1$
+
+$Pr(F>F_{stat})=0$
+
+Since the p-value is less than the significance level, reject the null.
+
+##### Interaction Effect of BC
+
+$BC=\frac{1}{4}((1)+a-b-ab-c-ac+bc+abc)$ $=\frac{-105}{4}=-26.25$
+
+$SS_{BC}=\frac{(contrast_{bc})^2}{2^3}$ $=\frac{-105^2}{8}=1378.125$
+
+$H_0: \sigma^2_{\beta\gamma} = 0$
+
+$H_a: \sigma^2_{\beta\gamma} \ne 0$
+
+$F_{stat}= MSBC /MSABC =0.4589$
+
+$Pr(F>F_{stat})=0.622$
+
+Since the p-value is greater than the significance level, retain the
+null.
+
+##### Interaction Effect of ABC
+
+$ABC=\frac{1}{4}(-(1)+a+b-ab+c-ac-bc+abc)$ $=\frac{155}{4}=38.75$
+
+$SS_{ABC}=\frac{(contrast_{bc})^2}{2^3}$ $=\frac{-105^2}{8}=1378.125$
+
+$H_0: \sigma^2_{\alpha\beta\gamma} = 0$
+
+$H_a: \sigma^2_{\tau\beta\gamma} \ne 0$
+
+$F_{stat}= MSABC /MSE =0.2871$
+
+$Pr(F>F_{stat})=0.62$
+
+Since the p-value is greater than the significance level, retain the
+null.
