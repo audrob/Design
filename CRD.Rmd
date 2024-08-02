@@ -1,5 +1,5 @@
 ---
-title: "Section 1"
+title: "Module 1"
 author: "Audrey Robertson"
 date: "2024-02-27"
 output: word_document
@@ -18,10 +18,6 @@ library(car)
 ```
 
 ## Question 1
-
-24 Rats were selected to study the effect of four different types of diets (D1, D2, D3, D4).
-
-The diets were given for a two-week period and the weight gains of the rats were recorded after the experimental period.
 
 R Code:
 
@@ -530,9 +526,7 @@ knitr::opts_chunk$set(echo=T)
 
 \newpage
 
-## Audrey Robertson Question 4
-
-In a germplasm bank in an experimental station, four new types of rice varieties were selected and compared. There were only 23 plots available.
+## Question 4
 
 R Code:
 
@@ -636,9 +630,8 @@ Confidence intervals are an interval estimate as opposed to a point estimate. In
 
 \newpage
 
-## Audrey Robertson Question 5
+## Question 5
 
-Data from a completely randomized experimental design with three treatments.\
 Use these data to construct the ANOVA Table.
 
 R Code:
@@ -675,7 +668,7 @@ knitr::kable(anova5, caption= "ANOVA Table", "simple")
 
 \newpage
 
-## Audrey Robertson Question 6
+## Question 6
 
 \
 Given the following:\
@@ -718,10 +711,8 @@ knitr::kable(anova6, caption= "ANOVA Table", "simple")
 
 \newpage
 
-## Audrey Robertson Question 7
+## Question 7
 
-\
-In an effort to harvest corn more efficiently, an experiment was conducted to evaluate the effect of five treatments for reducing the presence of weeds. Each treatment was applied while sowing and weed counts were observed at the time of harvest.
 
 R Code:
 
