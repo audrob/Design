@@ -1,5 +1,5 @@
 ---
-title: "7080-Robertson_Exam1"
+title: "Section 1"
 author: "Audrey Robertson"
 date: "2024-02-27"
 output: word_document
@@ -17,7 +17,7 @@ library(car)
 
 ```
 
-## Audrey Robertson Question 1
+## Question 1
 
 24 Rats were selected to study the effect of four different types of diets (D1, D2, D3, D4).
 
@@ -245,7 +245,7 @@ If there is no diet effect, the F-ratio value will be equal to 1.
 
 \newpage
 
-## Audrey Robertson Question 2
+## Question 2
 
 Using the data in question 1, do the following:
 
@@ -451,7 +451,7 @@ The confidence interval for D1, D2, and D4 contains 0, so these are selected as 
 
 \newpage
 
-## Audrey Robertson Question 3
+## Question 3
 
 ### Suppose that five normal populations have means of:
 
