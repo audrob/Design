@@ -1,0 +1,28 @@
+NOTE: Option OBS changed to 100.
+NOTE: DATA data5
+
+NOTE: Processing inline DATALINES (54 lines)
+
+NOTE: Read 54 rows from DATALINES.
+NOTE: Wrote data5 (54 rows, 5 columns).
+NOTE: DATA elapsed:
+  wall  0.00 seconds
+  cpu   0.00 seconds
+NOTE: DATA data5a
+
+
+NOTE: Read 54 rows from data5.
+NOTE: Wrote data5a (54 rows, 5 columns).
+NOTE: DATA elapsed:
+  wall  0.00 seconds
+  cpu   0.00 seconds
+NOTE: PROC SORT data=data5a
+
+NOTE: Read 54 rows from data5a.
+NOTE: Wrote data5a (54 rows, 5 columns).
+NOTE: PROC SORT statement used.
+NOTE: PROC ANOVA data=data5a
+
+NOTE: ODS plot written: anova_boxplot.spec.json
+NOTE: ODS plot written: anova_diagnostics.spec.json
+NOTE: PROC ANOVA: 54 observations, 10 effects analyzed

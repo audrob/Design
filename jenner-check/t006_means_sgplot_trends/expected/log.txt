@@ -1,0 +1,32 @@
+NOTE: Option OBS changed to 100.
+NOTE: DATA data5
+
+NOTE: Processing inline DATALINES (54 lines)
+
+NOTE: Read 54 rows from DATALINES.
+NOTE: Wrote data5 (54 rows, 5 columns).
+NOTE: DATA elapsed:
+  wall  0.00 seconds
+  cpu   0.00 seconds
+NOTE: PROC SORT data=data5
+
+NOTE: Read 54 rows from data5.
+NOTE: Wrote sort5 (54 rows, 5 columns).
+NOTE: PROC SORT statement used.
+NOTE: PROC MEANS
+NOTE: Output dataset means5a has 12 observations and 5 variables.
+NOTE: PROC MEANS statement used.
+NOTE: PROC SGPLOT data=means5a
+
+NOTE: PROC SGPLOT output written to: ./ods_output/sgplot.svg
+NOTE: PROC SORT data=data5
+
+NOTE: Read 54 rows from data5.
+NOTE: Wrote sort5b (54 rows, 5 columns).
+NOTE: PROC SORT statement used.
+NOTE: PROC MEANS
+NOTE: Output dataset means5b has 12 observations and 5 variables.
+NOTE: PROC MEANS statement used.
+NOTE: PROC SGPLOT data=means5b
+
+NOTE: PROC SGPLOT output written to: ./ods_output/sgplot1.svg

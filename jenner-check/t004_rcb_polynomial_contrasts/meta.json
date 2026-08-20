@@ -1,0 +1,7 @@
+{
+  "bundle": "t004_rcb_polynomial_contrasts",
+  "source_file": "RCB-Latin_Sq-Split_Plot-RMD.sas",
+  "source_blob_sha": "12adc77a58d387cc5ba1cfcdd53934f687979068",
+  "source_commit": "784c0c8e7489ca1f3d2487219b300e54038c55c0",
+  "notes": "Question 4 block: RCB nitrogen-response trial; PROC GLM with orthogonal polynomial CONTRAST statements (linear/quadratic/cubic/quartic). Only the source's first GLM model is shipped -- the source's second GLM in this block adds Rep as its own CLASS term stacked on Block*Nitrogen*Rep, which saturates the 20-obs design (0 error df); reproduced during self-check (documented PROC GLM aliasing/empty-cells warning, correct behavior for a degenerate model spec) but excluded as not meaningful compatibility-bundle material. Data unchanged from source."
+}

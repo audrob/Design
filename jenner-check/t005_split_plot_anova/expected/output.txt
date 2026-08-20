@@ -1,0 +1,52 @@
+
+      The ANOVA Procedure       
+    Class Level Information     
+
+Class       Levels  Values      
+--------  --------  ------------
+Unit             2  1 2         
+density          3  1.1 1.4 1.6 
+Moisture         3  0.1 0.2 0.24
+Day              3  1 2 3       
+
+Number of Observations Read        54
+Number of Observations Used        54
+
+Dependent Variable: CO2
+
+Source                  DF  Sum of Squares     Mean Square    F Value     Pr > F
+--------------------------------------------------------------------------------
+Unit                     1          1.1296          1.1296          .          .
+density                  2         14.8750          7.4375          .          .
+Unit*density             2          0.4906          0.2453          .          .
+Moisture                 2         38.5887         19.2943          .          .
+density*Moisture         4          6.4861          1.6215          .          .
+Unit*Moisture(densit    17         70.3210          4.1365          .          .
+Day                      2         11.8566          5.9283          .          .
+density*Day              4          0.4808          0.1202          .          .
+Moisture*Day             4          7.9334          1.9834          .          .
+density*Moisture*Day    20         17.0440          0.8522          .          .
+Error                    0          0.0000          0.0000          .          .
+Corrected Total         53         95.8340                          .          .
+
+R-Square: 1.7656  Root MSE: 0.0000  Mean: 2.4031
+
+Tests of Hypotheses Using the Anova MS for Unit*density as an Error Term
+
+Source                  DF        Anova SS     Mean Square    F Value     Pr > F
+--------------------------------------------------------------------------------
+Unit                     1          1.1296          1.1296       4.60     0.1650
+density                  2         14.8750          7.4375      30.32     0.0319
+
+Error: Unit*density       2          0.4906          0.2453
+
+Tests of Hypotheses Using the Anova MS for Unit*Moisture(density) as an Error Term
+
+Source                  DF        Anova SS     Mean Square    F Value     Pr > F
+--------------------------------------------------------------------------------
+Moisture                 2         38.5887         19.2943       4.66     0.0243
+density*Moisture         4          6.4861          1.6215       0.39     0.8115
+
+Error: Unit*Moisture(density)    17         70.3210          4.1365
+
+

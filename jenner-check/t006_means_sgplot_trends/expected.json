@@ -1,0 +1,20 @@
+{
+  "_captured_at": "2026-08-20T09:30:16Z",
+  "_captured_run_id": "r_7a57d49a8d42460aae80daaeec4c42d3",
+  "status": "ok",
+  "exit_code": 0,
+  "log_contains": [
+    "NOTE: PROC MEANS statement used.",
+    "NOTE: PROC SGPLOT data=means5a",
+    "NOTE: PROC SGPLOT data=means5b",
+    "NOTE: PROC SORT statement used."
+  ],
+  "log_does_not_contain": [
+    "ERROR:",
+    "[JENNER-ERROR"
+  ],
+  "diagnostics": {
+    "parse_warnings": [],
+    "runtime_warnings": []
+  }
+}
