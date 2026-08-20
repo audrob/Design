@@ -1,0 +1,41 @@
+NOTE: Option OBS changed to 100.
+NOTE: DATA data3
+
+NOTE: Processing inline DATALINES (25 lines)
+
+NOTE: Read 25 rows from DATALINES.
+NOTE: Wrote data3 (25 rows, 4 columns).
+NOTE: DATA elapsed:
+  wall  0.00 seconds
+  cpu   0.00 seconds
+NOTE: PROC SORT data=data3
+
+NOTE: Read 25 rows from data3.
+NOTE: Wrote data3 (25 rows, 4 columns).
+NOTE: PROC SORT statement used.
+NOTE: PROC GLM data=data3
+
+NOTE: ODS plot written: glm_residuals_vs_predicted.spec.json
+NOTE: ODS plot written: glm_residual_histogram_panel.spec.json
+NOTE: ODS plot written: glm_residuals_vs_obs_order.spec.json
+NOTE: ODS plot written: glm_qq_plot.spec.json
+NOTE: ODS plot written: glm_lsmeans_Signal.spec.json
+NOTE: PROC GLM ODS Graphics generated.
+NOTE: PROC GLM statement used.
+NOTE: PROC MEANS
+NOTE: Output dataset means3 has 5 observations and 4 variables.
+NOTE: PROC MEANS statement used.
+NOTE: PROC PRINT data=means3
+
+NOTE: PROC PRINT completed: 5 observations printed, 4 variables
+NOTE: DATA MCB3
+
+
+NOTE: Read 5 rows from means3.
+NOTE: Wrote MCB3 (5 rows, 7 columns).
+NOTE: DATA elapsed:
+  wall  0.00 seconds
+  cpu   0.00 seconds
+NOTE: PROC PRINT data=MCB3
+
+NOTE: PROC PRINT completed: 5 observations printed, 7 variables

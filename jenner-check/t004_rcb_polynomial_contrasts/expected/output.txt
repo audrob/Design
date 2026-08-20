@@ -1,0 +1,45 @@
+         The GLM Procedure          
+      Class Level Information       
+
+Class       Levels  Values          
+--------  --------  ----------------
+Block            2  1 2             
+Nitrogen         5  0 100 150 200 50
+
+Number of Observations Read        20
+Number of Observations Used        20
+
+                            The GLM Procedure                             
+                       Dependent Variable: response                       
+
+Source                 DF  Sum of Squares  Mean Square   F Value    Pr > F
+---------------  --------  --------------  -----------  --------  --------
+Model                   9      5734.45000    637.16111     16.75    <.0001
+Error                  10       380.50000     38.05000                    
+Corrected Total        19      6114.95000                                 
+
+R-Square  Coeff Var  Root MSE  Response Mean
+--------  ---------  --------  -------------
+0.937775    4.63620  6.168468     133.050000
+
+Source                DF   Type I SS  Mean Square   F Value    Pr > F
+--------------  --------  ----------  -----------  --------  --------
+Block                  1   938.45000    938.45000     24.66    0.0006
+Nitrogen               4  4460.20000   1115.05000     29.30    <.0001
+Block:Nitrogen         4   335.80000     83.95000      2.21    0.1414
+
+Source                DF  Type III SS  Mean Square   F Value    Pr > F
+--------------  --------  -----------  -----------  --------  --------
+Block                  1    938.45000    938.45000     24.66    0.0006
+Nitrogen               4   4460.20000   1115.05000     29.30    <.0001
+Block:Nitrogen         4    335.80000     83.95000      2.21    0.1414
+
+                      Contrast Results                       
+
+Contrast                  DF  Contrast SS   F Value    Pr > F
+------------------  --------  -----------  --------  --------
+Nitrogen Linear            1       0.0119      0.00    0.9862
+Nitrogen Quadratic         1     220.4167      5.79    0.0369
+Nitrogen Cubic             1      14.6944      0.39    0.5482
+Nitrogen Quartic           1      77.3581      2.03    0.1844
+

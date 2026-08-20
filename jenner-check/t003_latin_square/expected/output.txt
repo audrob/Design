@@ -1,0 +1,113 @@
+        The GLM Procedure        
+     Class Level Information     
+
+Class           Levels  Values   
+------------  --------  ---------
+Intersection         5  1 2 3 4 5
+Period               5  1 2 3 4 5
+Signal               5  A B C D E
+
+Number of Observations Read        25
+Number of Observations Used        25
+
+                            The GLM Procedure                             
+                         Dependent Variable: resp                         
+
+Source                 DF  Sum of Squares  Mean Square   F Value    Pr > F
+---------------  --------  --------------  -----------  --------  --------
+Model                  12      1186.17520     98.84793     16.92    <.0001
+Error                  12        70.09520      5.84127                    
+Corrected Total        24      1256.27040                                 
+
+R-Square  Coeff Var  Root MSE  Resp Mean
+--------  ---------  --------  ---------
+0.944204   10.44998  2.416871  23.128000
+
+Source              DF   Type I SS  Mean Square   F Value    Pr > F
+------------  --------  ----------  -----------  --------  --------
+Signal               4    76.28240     19.07060      3.26    0.0498
+Intersection         4    18.22640      4.55660      0.78    0.5593
+Period               4  1091.66640    272.91660     46.72    <.0001
+
+Source              DF  Type III SS  Mean Square   F Value    Pr > F
+------------  --------  -----------  -----------  --------  --------
+Signal               4     76.28240     19.07060      3.26    0.0498
+Intersection         4     18.22640      4.55660      0.78    0.5593
+Period               4   1091.66640    272.91660     46.72    <.0001
+
+                   Estimate Results                   
+
+Label     Estimate  Standard Error   t Value  Pr > |t|
+--------  --------  --------------  --------  --------
+A VS B    -0.76000         1.52856     -0.50    0.6280
+
+       Means for Effect: Signal       
+
+Level         Mean   Std Dev         N
+--------  --------  --------  --------
+A         24.12000   7.32885         5
+B         24.88000   7.91183         5
+C         20.00000   6.87677         5
+D         22.50000   7.98499         5
+E         24.14000   8.22423         5
+
+   Bonferroni (Dunn) t Tests for Resp   
+
+                                        
+------------------------------  --------
+Alpha                               0.05
+Error Degrees of Freedom              12
+Error Mean Square               5.841267
+Critical Value of t              3.42844
+Minimum Significant Difference    5.2406
+
+                  Comparisons significant at the 0.05 level are indicated by ***.                  
+
+Signal Comparison  Difference Between Means  Simultaneous 95% Confidence Limits                    
+-----------------  ------------------------  ----------------------------------  --------  --------
+A - B                               -0.7600                             -6.0006    4.4806          
+B - A                                0.7600                             -4.4806    6.0006          
+A - C                                4.1200                             -1.1206    9.3606          
+C - A                               -4.1200                             -9.3606    1.1206          
+A - D                                1.6200                             -3.6206    6.8606          
+D - A                               -1.6200                             -6.8606    3.6206          
+A - E                               -0.0200                             -5.2606    5.2206          
+E - A                                0.0200                             -5.2206    5.2606          
+B - C                                4.8800                             -0.3606   10.1206          
+C - B                               -4.8800                            -10.1206    0.3606          
+B - D                                2.3800                             -2.8606    7.6206          
+D - B                               -2.3800                             -7.6206    2.8606          
+B - E                                0.7400                             -4.5006    5.9806          
+E - B                               -0.7400                             -5.9806    4.5006          
+C - D                               -2.5000                             -7.7406    2.7406          
+D - C                                2.5000                             -2.7406    7.7406          
+C - E                               -4.1400                             -9.3806    1.1006          
+E - C                                4.1400                             -1.1006    9.3806          
+D - E                               -1.6400                             -6.8806    3.6006          
+E - D                                1.6400                             -3.6006    6.8806          
+
+        Least Squares Means for Signal         
+
+Signal    Resp LSMEAN  Standard Error  Pr > |t|
+--------  -----------  --------------  --------
+A             24.1200          1.0809    <.0001
+B             24.8800          1.0809    <.0001
+C             20.0000          1.0809    <.0001
+D             22.5000          1.0809    <.0001
+E             24.1400          1.0809    <.0001
+
+
+  Obs  Signal  _TYPE_  _FREQ_  MeanResp
+    1  A            0       5     24.12
+    2  B            0       5     24.88
+    3  C            0       5        20
+    4  D            0       5      22.5
+    5  E            0       5     24.14
+
+  Obs  Signal  MeanResp  MinMean     Di            M         Lower        Upper
+    1  A          24.12       20   4.12  4.050693645   0.069306355  8.170693645
+    2  B          24.88       20   4.88  4.050693645   0.829306355  8.930693645
+    3  C             20    21.14  -1.14  4.050693645  -5.190693645  2.910693645
+    4  D           22.5       20    2.5  4.050693645  -1.550693645  6.550693645
+    5  E          24.14       20   4.14  4.050693645   0.089306355  8.190693645
+

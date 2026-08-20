@@ -1,0 +1,20 @@
+{
+  "_captured_at": "2026-08-20T09:30:16Z",
+  "_captured_run_id": "r_5bfd9a6cd6e746a3b97067e9fb853392",
+  "status": "ok",
+  "exit_code": 0,
+  "log_contains": [
+    "NOTE: PROC GLM statement used.",
+    "NOTE: PROC SORT statement used.",
+    "NOTE: PROC PRINT data=means3",
+    "NOTE: PROC PRINT data=MCB3"
+  ],
+  "log_does_not_contain": [
+    "ERROR:",
+    "[JENNER-ERROR"
+  ],
+  "diagnostics": {
+    "parse_warnings": [],
+    "runtime_warnings": []
+  }
+}

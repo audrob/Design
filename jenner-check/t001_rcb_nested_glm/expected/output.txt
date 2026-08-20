@@ -1,0 +1,61 @@
+      The GLM Procedure       
+   Class Level Information    
+
+Class         Levels  Values  
+----------  --------  --------
+Bar_Size           3  1 1.5 2 
+Vendor             3  1 2 3   
+Heat_Level         3  1 2 3   
+Rep                2  1 2     
+
+Number of Observations Read        54
+Number of Observations Used        54
+
+                            The GLM Procedure                             
+                       Dependent Variable: strength                       
+
+Source                 DF  Sum of Squares  Mean Square   F Value    Pr > F
+---------------  --------  --------------  -----------  --------  --------
+Model                  18         0.11737      0.00652     12.31    <.0001
+Error                  35         0.01854      0.00053                    
+Corrected Total        53         0.13590                                 
+
+R-Square  Coeff Var  Root MSE  Strength Mean
+--------  ---------  --------  -------------
+0.863599    1.76685  0.023014       1.302537
+
+Source                     DF  Type I SS  Mean Square   F Value    Pr > F
+-------------------  --------  ---------  -----------  --------  --------
+Bar_Size                    2    0.00253      0.00126      2.38    0.1069
+Vendor                      2    0.00885      0.00442      8.35    0.0011
+Heat_Level                  2    0.03221      0.01611     30.41    <.0001
+Bar_Size:Vendor             4    0.00238      0.00059      1.12    0.3622
+Vendor:Heat_Level           4    0.06800      0.01700     32.10    <.0001
+Bar_Size:Heat_Level         4    0.00341      0.00085      1.61    0.1941
+
+Source                     DF  Type III SS  Mean Square   F Value    Pr > F
+-------------------  --------  -----------  -----------  --------  --------
+Bar_Size                    2      0.00253      0.00126      2.38    0.1069
+Vendor                      2      0.00885      0.00442      8.35    0.0011
+Heat_Level                  2      0.03221      0.01611     30.41    <.0001
+Bar_Size:Vendor             4      0.00238      0.00059      1.12    0.3622
+Vendor:Heat_Level           4      0.06800      0.01700     32.10    <.0001
+Bar_Size:Heat_Level         4      0.00341      0.00085      1.61    0.1941
+
+      Type III Expected Mean Squares      
+
+Source                     DF  Mean Square
+-------------------  --------  -----------
+bar_size                    2      0.00126
+vendor                      2      0.00442
+heat_level                  2      0.01611
+bar_size*vendor             4      0.00059
+vendor*heat_level           4      0.01700
+bar_size*heat_level         4      0.00085
+
+Tests of Hypotheses Using the Type III MS for Heat_Level(Vendor) as an Error Term
+
+Source          DF  Mean Square   F Value    Pr > F
+--------  --------  -----------  --------  --------
+Vendor           2      0.00442      0.26    0.7830
+

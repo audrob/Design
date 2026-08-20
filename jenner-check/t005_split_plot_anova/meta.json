@@ -1,0 +1,7 @@
+{
+  "bundle": "t005_split_plot_anova",
+  "source_file": "RCB-Latin_Sq-Split_Plot-RMD.sas",
+  "source_blob_sha": "12adc77a58d387cc5ba1cfcdd53934f687979068",
+  "source_commit": "784c0c8e7489ca1f3d2487219b300e54038c55c0",
+  "notes": "Question 5 block (opening ANOVA subsection): split-split-plot soil CO2 trial (Density/Moisture(Density)/Day); PROC ANOVA with nested TEST statements against Unit*Density and Unit*Moisture(Density) error terms. Data and logic unchanged from source; one mechanical fix -- 'proc sort data5a;' missing '=' (a typo the source itself corrects two lines later at its own line 481) rewritten to 'proc sort data=data5a;'. The remaining ~250 lines of this Question block (diagnostic residual plots) were left out: they reference datasets the source script never actually creates under the name used (residuals_means, residual_means2/residuals_means2 name mismatch, MeansCO2 typo) -- the student's own downstream data-prep errors, not a coherent unit to bundle."
+}

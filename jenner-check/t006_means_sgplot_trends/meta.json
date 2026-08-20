@@ -1,0 +1,7 @@
+{
+  "bundle": "t006_means_sgplot_trends",
+  "source_file": "RCB-Latin_Sq-Split_Plot-RMD.sas",
+  "source_blob_sha": "12adc77a58d387cc5ba1cfcdd53934f687979068",
+  "source_commit": "784c0c8e7489ca1f3d2487219b300e54038c55c0",
+  "notes": "Question 5 block (summary/plotting subsection): soil-CO2 trial summarized with PROC MEANS (BY Density / BY Moisture, CLASS Day) then plotted with PROC SGPLOT (grouped SCATTER + SERIES trend lines over Day). Data and logic unchanged from source; no substitution needed."
+}
